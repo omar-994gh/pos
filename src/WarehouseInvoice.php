@@ -95,17 +95,38 @@ class WarehouseInvoice
         try {
             $this->db->beginTransaction();
 
-            // 1) حذف البنود
-            $stmtItems = $this->db->prepare(
-                'DELETE FROM Warehouse_Invoice_Items WHERE invoice_id = :iid'
+            // احصل على نوع الفاتورة وبنودها لضبط المخزون أولاً
+            $stmtInv = $this->db->prepare('SELECT entry_type FROM Warehouse_Invoices WHERE id = :iid');
+            $stmtInv->execute([':iid' => $invoiceId]);
+            $invRow = $stmtInv->fetch(PDO::FETCH_ASSOC);
+            $entryType = strtoupper(trim($invRow['entry_type'] ?? 'IN')) === 'OUT' ? 'OUT' : 'IN';
+
+            // جلب كل البنود مع الكميات
+            $stmtFetchItems = $this->db->prepare(
+                'SELECT item_id, quantity FROM Warehouse_Invoice_Items WHERE invoice_id = :iid'
             );
+            $stmtFetchItems->execute([':iid' => $invoiceId]);
+            $items = $stmtFetchItems->fetchAll(PDO::FETCH_ASSOC);
+
+            // عكس تأثير البنود على المخزون
+            foreach ($items as $row) {
+                $qty = (float)$row['quantity'];
+                $itemId = (int)$row['item_id'];
+                // إذا كانت الفاتورة إدخالاً فقد زادت الكمية سابقاً ⇒ ننقصها الآن
+                // وإذا كانت إخراجاً فقد نُقصت الكمية سابقاً ⇒ نزيدها الآن
+                $deltaSql = $entryType === 'IN'
+                    ? 'UPDATE Items SET stock = stock - :q WHERE id = :id'
+                    : 'UPDATE Items SET stock = stock + :q WHERE id = :id';
+                $this->db->prepare($deltaSql)->execute([':q' => $qty, ':id' => $itemId]);
+            }
+
+            // 1) حذف البنود بعد تعديل المخزون
+            $stmtItems = $this->db->prepare('DELETE FROM Warehouse_Invoice_Items WHERE invoice_id = :iid');
             $stmtItems->execute([':iid' => $invoiceId]);
 
             // 2) حذف الفاتورة
-            $stmtInv = $this->db->prepare(
-                'DELETE FROM Warehouse_Invoices WHERE id = :iid'
-            );
-            $stmtInv->execute([':iid' => $invoiceId]);
+            $stmtDeleteInv = $this->db->prepare('DELETE FROM Warehouse_Invoices WHERE id = :iid');
+            $stmtDeleteInv->execute([':iid' => $invoiceId]);
 
             $this->db->commit();
             return true;
@@ -124,13 +145,38 @@ class WarehouseInvoice
      */
     public function deleteItem(int $invoiceId, int $itemId): bool
     {
-        $stmt = $this->db->prepare(
-            'DELETE FROM Warehouse_Invoice_Items 
-             WHERE invoice_id = :iid AND item_id = :itid'
-        );
-        return $stmt->execute([
-            ':iid'  => $invoiceId,
-            ':itid' => $itemId,
-        ]);
+        try {
+            $this->db->beginTransaction();
+
+            // جلب نوع الفاتورة والكمية للبند المحدد
+            $stmtType = $this->db->prepare('SELECT entry_type FROM Warehouse_Invoices WHERE id = :iid');
+            $stmtType->execute([':iid' => $invoiceId]);
+            $entryType = strtoupper(trim(($stmtType->fetch(PDO::FETCH_ASSOC)['entry_type'] ?? 'IN')));
+            $entryType = $entryType === 'OUT' ? 'OUT' : 'IN';
+
+            $stmtQty = $this->db->prepare('SELECT quantity FROM Warehouse_Invoice_Items WHERE invoice_id = :iid AND item_id = :itid');
+            $stmtQty->execute([':iid' => $invoiceId, ':itid' => $itemId]);
+            $row = $stmtQty->fetch(PDO::FETCH_ASSOC);
+            $qty = (float)($row['quantity'] ?? 0);
+
+            if ($qty > 0) {
+                // عكس تأثير هذا البند على المخزون
+                $deltaSql = $entryType === 'IN'
+                    ? 'UPDATE Items SET stock = stock - :q WHERE id = :id'
+                    : 'UPDATE Items SET stock = stock + :q WHERE id = :id';
+                $this->db->prepare($deltaSql)->execute([':q' => $qty, ':id' => $itemId]);
+            }
+
+            // حذف البند
+            $stmtDel = $this->db->prepare('DELETE FROM Warehouse_Invoice_Items WHERE invoice_id = :iid AND item_id = :itid');
+            $stmtDel->execute([':iid' => $invoiceId, ':itid' => $itemId]);
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('WarehouseInvoice::deleteItem error: ' . $e->getMessage());
+            return false;
+        }
     }
 }

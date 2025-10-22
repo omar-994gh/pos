@@ -25,6 +25,15 @@ class WarehouseInvoiceItem
             // بدء المعاملة لضمان تكامل البيانات
             $this->db->beginTransaction();
 
+            // معرفة نوع الفاتورة (إدخال/إخراج) من رأس الفاتورة
+            $entryType = 'IN';
+            $invTypeStmt = $this->db->prepare('SELECT entry_type FROM Warehouse_Invoices WHERE id = :iid');
+            $invTypeStmt->execute([':iid' => $data['invoice_id']]);
+            $rowType = $invTypeStmt->fetch(PDO::FETCH_ASSOC);
+            if ($rowType && !empty($rowType['entry_type'])) {
+                $entryType = strtoupper(trim($rowType['entry_type'])) === 'OUT' ? 'OUT' : 'IN';
+            }
+
             // 1. إدراج سجل في جدول فواتير المستودع
             $stmt = $this->db->prepare(
                 'INSERT INTO Warehouse_Invoice_Items
@@ -42,9 +51,10 @@ class WarehouseInvoiceItem
             ]);
 
             // 2. تحديث كمية الصنف في جدول الأصناف
-            $updateStmt = $this->db->prepare(
-                'UPDATE Items SET stock = stock + :quantity WHERE id = :item_id'
-            );
+            $sqlUpdate = $entryType === 'OUT'
+                ? 'UPDATE Items SET stock = stock - :quantity WHERE id = :item_id'
+                : 'UPDATE Items SET stock = stock + :quantity WHERE id = :item_id';
+            $updateStmt = $this->db->prepare($sqlUpdate);
             $updateStmt->execute([
                 ':quantity' => $data['quantity'],
                 ':item_id'  => $data['item_id'],
