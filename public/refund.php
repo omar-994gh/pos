@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../src/init.php';
 require_once __DIR__ . '/../src/Auth.php';
 require_once __DIR__ . '/../src/SalesLog.php';
+require_once __DIR__ . '/../src/ExchangeRate.php';
 
 Auth::requireLogin();
 if (!Auth::isAdmin()) { 
@@ -17,6 +18,9 @@ $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 $model = new SalesLog($db);
 $summary = $model->summary($from, $to, $userId);
 $details = $model->details($from, $to, $userId);
+
+$exchangeRateManager = new ExchangeRate($db);
+$exchangeSettings = $exchangeRateManager->getSystemSettings();
 
 $usersList = $db->query("SELECT id, username FROM Users ORDER BY username")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -77,7 +81,7 @@ include 'header.php';
                 <h5>تفاصيل الطلب #<?= $orderId ?></h5>
                 <p class="mb-1">المستخدم: <?= htmlspecialchars($orderDetails[0]['username']) ?></p>
                 <p class="mb-1">التاريخ: <?= htmlspecialchars($orderDetails[0]['created_at']) ?></p>
-                <p class="mb-0">المجموع: <?= number_format($orderDetails[0]['order_total'], 2) ?></p>
+                <p class="mb-0">المجموع: <?= number_format($orderDetails[0]['order_total'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></p>
             </div>
             <div class="card-body">
                 <div class="mb-3 text-start">
@@ -135,8 +139,8 @@ include 'header.php';
                 <tr>
                     <td><?= htmlspecialchars($row['username']) ?></td>
                     <td><?= $row['sale_count'] ?></td>
-                    <td><?= number_format($row['total_amount'], 2) ?></td>
-                    <td><?= number_format($row['avg_amount'], 2) ?></td>
+                    <td><?= number_format($row['total_amount'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
+                    <td><?= number_format($row['avg_amount'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
                     <td>
                         <a href="?date_from=<?= urlencode($from) ?>&date_to=<?= urlencode($to) ?>&user_id=<?= $row['user_id'] ?>" 
                            class="btn btn-sm btn-info">عرض الفواتير</a>
@@ -167,7 +171,7 @@ include 'header.php';
                     <td><?= $o['order_id'] ?></td>
                     <td><?= htmlspecialchars($o['created_at']) ?></td>
                     <td><?= htmlspecialchars($o['username']) ?></td>
-                    <td><?= number_format($o['total'], 2) ?></td>
+                    <td><?= number_format($o['total'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
                     <td>
                         <a href="?date_from=<?= urlencode($from) ?>&date_to=<?= urlencode($to) ?>&user_id=<?= $userId ?>&order_id=<?= $o['order_id'] ?>" 
                            class="btn btn-sm btn-primary">عرض التفاصيل</a>
