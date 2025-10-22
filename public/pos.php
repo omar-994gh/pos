@@ -16,7 +16,8 @@ $itemModel  = new Item($db);
 $exchangeRateManager = new ExchangeRate($db);
 $exchangeSettings = $exchangeRateManager->getSystemSettings();
 
-$groups = $groupModel->all();
+// Get only visible groups for POS interface
+$groups = $groupModel->visible();
 $settings = $db->query("SELECT tax_rate, currency, font_size_title, font_size_item, font_size_total FROM System_Settings ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
 $taxRate = $settings['tax_rate'] ?? 0;
 $currency = $settings['currency'] ?? 'USD';

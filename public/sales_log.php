@@ -60,18 +60,15 @@ $usersList = $db->query("SELECT id, username FROM Users ORDER BY username")->fet
     <thead><tr><th>المستخدم</th><th>عدد الفواتير</th><th>إجمالي المبيعات</th><th>متوسط قيمة الفاتورة</th></tr></thead>
     <tbody>
       <?php foreach ($summary as $row): 
-        // Convert prices if exchange rate is enabled
+        // Display amounts directly (already in base currency from database)
         $totalAmount = (float)$row['total_amount'];
         $avgAmount = (float)$row['avg_amount'];
-        
-        $totalAmount = $exchangeRateManager->convertToDisplayCurrency($totalAmount, $row['currency']);
-        $avgAmount = $exchangeRateManager->convertToDisplayCurrency($avgAmount, $row['currency']);
       ?>
       <tr>
         <td><?= htmlspecialchars($row['username']) ?></td>
         <td><?= $row['sale_count'] ?></td>
-        <td><?= number_format((float)$row['total_amount'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
-        <td><?= number_format((float)$row['avg_amount'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
+        <td><?= number_format($totalAmount, 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
+        <td><?= number_format($avgAmount, 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
       </tr>
       <?php endforeach; ?>
       <?php if (empty($summary)): ?>
