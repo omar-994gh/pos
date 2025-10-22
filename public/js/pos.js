@@ -1,0 +1,1 @@
+// Deprecated script. POS logic lives in public/pos.php inline script.

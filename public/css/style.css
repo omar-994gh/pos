@@ -1,0 +1,164 @@
+body { background-color: #f8f9fa; text-align: right;}
+.group-button { margin-bottom: 10px; font-weight: bold; }
+.item-card img { height: 100px; object-fit: cover; }
+.item-card { transition: transform 0.2s ease-in-out; }
+.item-card:hover { transform: scale(1.05); }
+.basket-summary { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+/* إجبار اتجاه الصفحة RTL */
+html, body {
+  direction: rtl !important;
+  text-align: right !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* تبويبات المجموعات بألوان مميزة */
+.nav-tabs .nav-link {
+  color: #495057;
+  border: none;
+  margin-right: 8px;
+  transition: background-color .3s, color .3s;
+}
+.nav-tabs .nav-link.active {
+  color: #000 !important;
+}
+@media (min-width: 768px) {
+  /* توليد ألوان متغيرة حسب رقم التبويب */
+  .nav-tabs .nav-link[data-group-index="0"].active { background-color: #FF6B6B; }
+  .nav-tabs .nav-link[data-group-index="1"].active { background-color: #4ECDC4; }
+  .nav-tabs .nav-link[data-group-index="2"].active { background-color: #1A535C; }
+  .nav-tabs .nav-link[data-group-index="3"].active { background-color: #FFA500; }
+  .nav-tabs .nav-link[data-group-index="4"].active { background-color: #6C5B7B; }
+  /* أكسب أسماء المجموعات خلفية فاتحة عند غير التفعيل */
+  .nav-tabs .nav-link[data-group-index="0"] { background-color: #ffecec; color: #000 }
+  .nav-tabs .nav-link[data-group-index="1"] { background-color: #e6fffa; color: #000}
+  .nav-tabs .nav-link[data-group-index="2"] { background-color: #e8f6f9; color: #000}
+  .nav-tabs .nav-link[data-group-index="3"] { background-color: #fff5e6; color: #000}
+  .nav-tabs .nav-link[data-group-index="4"] { background-color: #f2e9f1; color: #000}
+}
+
+/* بطاقات العناصر */
+.card {
+  border: none;
+  border-radius: .75rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: transform .2s, box-shadow .2s;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+/* صورة العنصر */
+.card-img-top {
+  object-fit: cover;
+  height: 150px;
+}
+
+/* زر الإضافة */
+.add-to-cart {
+  background-color: #007bff;
+  border: none;
+}
+.add-to-cart:hover {
+  background-color: #0056b3;
+}
+
+/* حقول الكمية */
+.qty-input {
+  width: 100%;
+  text-align: center;
+}
+
+/* جدول السلة */
+#cartTable th, #cartTable td {
+  vertical-align: middle;
+}
+
+/* أزرار الإزالة */
+.remove {
+  background: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 1.2rem;
+}
+
+/* تظليل العناصر في السلة */
+#cartTable tr:nth-child(odd) {
+  background-color: #f1f3f5;
+}
+
+/* public/css/print.css */
+
+/* القواعد تطبّق فقط إذا وُجدت الصفة .print-mode على <body> */
+body.print-mode * {
+  visibility: hidden;
+}
+
+body.print-mode main,
+body.print-mode main * {
+  visibility: visible;
+}
+
+body.print-mode main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+body.print-mode button,
+body.print-mode .btn,
+body.print-mode a {
+  display: none !important;
+}
+
+body.print-mode table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.print-mode table th,
+body.print-mode table td {
+  border: 1px solid #000;
+  padding: 8px;
+  text-align: left;
+}
+
+body.print-mode tr,
+body.print-mode img {
+  page-break-inside: avoid;
+}
+
+body.print-mode {
+  font-size: 12pt;
+}
+
+body.print-mode header,
+body.print-mode footer,
+body.print-mode nav,
+body.print-mode .no-print {
+  display: none !important;
+}
+.app-gradient {
+	background: linear-gradient(135deg, #0ea5e9 0%, #1e3a8a 100%);
+	min-height: 100vh;
+}
+.glass-header {
+	background: rgba(255,255,255,0.65);
+	backdrop-filter: saturate(160%) blur(8px);
+	-webkit-backdrop-filter: saturate(160%) blur(8px);
+	border-radius: 12px;
+}
+.toast {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	padding: 12px 16px;
+	border-radius: 8px;
+	background: rgba(255,255,255,0.92);
+	box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+	z-index: 9999;
+	display: none;
+}
+.toast.show { display: block; }
