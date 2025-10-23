@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../src/init.php';
 require_once __DIR__ . '/../src/Auth.php';
 require_once __DIR__ . '/../src/WarehouseInvoice.php';
+require_once __DIR__ . '/../src/ExchangeRate.php';
 
 Auth::requireLogin();
 if (!Auth::isAdmin()) {
@@ -11,6 +12,8 @@ if (!Auth::isAdmin()) {
 }
 
 $model   = new WarehouseInvoice($db);
+$exchangeRateManager = new ExchangeRate($db);
+$exchangeSettings = $exchangeRateManager->getSystemSettings();
 
 // إذا كان هناك طلبية حذف فاتورة (invoice_id) فننفذ الحذف
 if (!empty($_GET['delete_invoice'])) {
@@ -84,7 +87,7 @@ $entries = $model->all($filters);
         <td><?= htmlspecialchars($e['supplier']) ?></td>
         <td><?= htmlspecialchars($e['date']) ?></td>
         <td><?= $e['items_count'] ?></td>
-        <td><?= number_format($e['invoice_total'],2) ?></td>
+        <td><?= number_format($e['invoice_total'],2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
         <td><?= $e['entry_type']==='IN'?'إدخال':'إخراج' ?></td>
         <td>
           <a href="warehouse_entry_view.php?id=<?= $e['id'] ?>"

@@ -24,11 +24,27 @@ $exchangeSettings = $exchangeRateManager->getSystemSettings();
 
 $usersList = $db->query("SELECT id, username FROM Users ORDER BY username")->fetchAll(PDO::FETCH_ASSOC);
 
-// Get order details if order_id is specified
+// Get order details if order_id is specified with currency conversion
 $orderDetails = [];
+$orderTotalConverted = 0;
 if ($orderId) {
+    // Get exchange rate settings
+    $usdToSypRate = (float)($exchangeSettings['usd_to_syp_rate'] ?? 15000.0);
+    $baseCurrency = $exchangeSettings['base_currency'] ?? 'SYP';
+    
+    // Build conversion expression
+    if ($baseCurrency === 'SYP') {
+        $convertExpression = "CASE WHEN i.currency = 'USD' THEN oi.quantity * oi.unit_price * $usdToSypRate ELSE oi.quantity * oi.unit_price END";
+        $priceConvertExpression = "CASE WHEN i.currency = 'USD' THEN oi.unit_price * $usdToSypRate ELSE oi.unit_price END";
+    } else { // USD
+        $convertExpression = "CASE WHEN i.currency = 'SYP' THEN oi.quantity * oi.unit_price / $usdToSypRate ELSE oi.quantity * oi.unit_price END";
+        $priceConvertExpression = "CASE WHEN i.currency = 'SYP' THEN oi.unit_price / $usdToSypRate ELSE oi.unit_price END";
+    }
+    
     $stmt = $db->prepare("
-        SELECT oi.*, o.created_at, o.total as order_total, u.username, i.name_ar as item_name
+        SELECT oi.*, o.created_at, u.username, i.name_ar as item_name, i.currency,
+               $convertExpression as item_total_converted,
+               $priceConvertExpression as unit_price_converted
         FROM Order_Items oi
         JOIN Orders o ON oi.order_id = o.id
         JOIN Users u ON o.user_id = u.id
@@ -38,6 +54,9 @@ if ($orderId) {
     ");
     $stmt->execute([$orderId]);
     $orderDetails = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Calculate order total from items
+    $orderTotalConverted = array_sum(array_column($orderDetails, 'item_total_converted'));
 }
 
 include 'header.php';
@@ -81,7 +100,7 @@ include 'header.php';
                 <h5>تفاصيل الطلب #<?= $orderId ?></h5>
                 <p class="mb-1">المستخدم: <?= htmlspecialchars($orderDetails[0]['username']) ?></p>
                 <p class="mb-1">التاريخ: <?= htmlspecialchars($orderDetails[0]['created_at']) ?></p>
-                <p class="mb-0">المجموع: <?= number_format($orderDetails[0]['order_total'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></p>
+                <p class="mb-0">المجموع: <?= number_format($orderTotalConverted, 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></p>
             </div>
             <div class="card-body">
                 <div class="mb-3 text-start">
@@ -102,8 +121,8 @@ include 'header.php';
                             <tr>
                                 <td><?= htmlspecialchars($item['item_name']) ?></td>
                                 <td><?= $item['quantity'] ?></td>
-                                <td><?= number_format($item['unit_price'], 2) ?></td>
-                                <td><?= number_format($item['quantity'] * $item['unit_price'], 2) ?></td>
+                                <td><?= number_format($item['unit_price_converted'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
+                                <td><?= number_format($item['item_total_converted'], 2) ?> <?= htmlspecialchars($exchangeSettings['base_currency']) ?></td>
                                 <td>
                                     <button class="btn btn-sm btn-warning refund-btn" 
                                             data-item-id="<?= $item['item_id'] ?>"

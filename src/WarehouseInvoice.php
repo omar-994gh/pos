@@ -12,15 +12,29 @@ class WarehouseInvoice
 
     /**
      * جلب جميع الفواتير مع فلترة حسب المورد، النطاق الزمني، واسم المادة
+     * يقوم بتوحيد العملات باستخدام أسعار التعادل
      * @param array $filters ['supplier'=>string, 'date_from'=>string, 'date_to'=>string, 'item_name'=>string]
      * @return array
      */
     public function all(array $filters = []): array
     {
+        // Get exchange rate settings
+        $settingsStmt = $this->db->query("SELECT base_currency, usd_to_syp_rate FROM System_Settings ORDER BY id DESC LIMIT 1");
+        $settings = $settingsStmt->fetch(PDO::FETCH_ASSOC);
+        $baseCurrency = $settings['base_currency'] ?? 'SYP';
+        $usdToSypRate = (float)($settings['usd_to_syp_rate'] ?? 15000.0);
+        
+        // Build conversion logic based on base currency
+        if ($baseCurrency === 'SYP') {
+            $convertExpression = "CASE WHEN i.currency = 'USD' THEN wii.total_price * $usdToSypRate ELSE wii.total_price END";
+        } else { // USD
+            $convertExpression = "CASE WHEN i.currency = 'SYP' THEN wii.total_price / $usdToSypRate ELSE wii.total_price END";
+        }
+        
         $sql = "
           SELECT wi.id, w.name AS warehouse, wi.supplier, wi.date, wi.entry_type,
                  COUNT(wii.item_id) AS items_count,
-                 SUM(wii.total_price) AS invoice_total,
+                 SUM($convertExpression) AS invoice_total,
                  i.name_ar
           FROM Warehouse_Invoices wi
           JOIN Warehouses w   ON wi.warehouse_id = w.id
