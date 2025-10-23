@@ -18,21 +18,34 @@ $userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 
 $usersList = $db->query("SELECT id, username FROM Users ORDER BY username")->fetchAll(PDO::FETCH_ASSOC);
 
-// Modified SQL query to join with warehouse_invoice_items on item_id and the latest invoice_id
+// Get exchange rate for currency conversion
+$usdToSypRate = (float)($exchangeSettings['usd_to_syp_rate'] ?? 15000.0);
+$baseCurrency = $exchangeSettings['base_currency'] ?? 'SYP';
+
+// Build conversion expressions based on base currency
+if ($baseCurrency === 'SYP') {
+    $salesConvert = "CASE WHEN i.currency = 'USD' THEN oi.quantity * oi.unit_price * $usdToSypRate ELSE oi.quantity * oi.unit_price END";
+    $costConvert = "CASE WHEN i.currency = 'USD' THEN oi.quantity * wh.unit_price * $usdToSypRate ELSE oi.quantity * wh.unit_price END";
+} else { // USD
+    $salesConvert = "CASE WHEN i.currency = 'SYP' THEN oi.quantity * oi.unit_price / $usdToSypRate ELSE oi.quantity * oi.unit_price END";
+    $costConvert = "CASE WHEN i.currency = 'SYP' THEN oi.quantity * wh.unit_price / $usdToSypRate ELSE oi.quantity * wh.unit_price END";
+}
+
+// Modified SQL query to join with warehouse_invoice_items and convert currencies
 $stmt = $db->prepare("SELECT
     g.name AS group_name,
     i.name_ar AS item_name,
     i.currency,
     SUM(oi.quantity) AS qty,
-    SUM(oi.quantity * oi.unit_price) AS total_sales,
-    SUM(oi.quantity * wh.unit_price) AS total_cost,
-    (SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * wh.unit_price)) AS net_profit
+    SUM($salesConvert) AS total_sales,
+    SUM($costConvert) AS total_cost,
+    (SUM($salesConvert) - SUM($costConvert)) AS net_profit
 FROM Order_Items oi
 JOIN Orders o ON o.id = oi.order_id
 JOIN Items i ON i.id = oi.item_id
 LEFT JOIN Groups g ON g.id = i.group_id
 LEFT JOIN (
-    -- Subquery to get the latest unite_price for each item_id based on the highest invoice_id
+    -- Subquery to get the latest unit_price for each item_id based on the highest invoice_id
     SELECT item_id, unit_price
     FROM warehouse_invoice_items
     WHERE invoice_id IN (
@@ -43,7 +56,7 @@ WHERE DATE(o.created_at) BETWEEN :from AND :to
 " . ($userId > 0 ? " AND o.user_id=:uid" : "") . (
     ($timeFrom !== '' && $timeTo !== '') ? " AND time(o.created_at) BETWEEN :tfrom AND :tto" : ''
 ) .
-" GROUP BY g.name, i.name_ar ORDER BY g.name, i.name_ar");
+" GROUP BY g.name, i.name_ar, i.currency ORDER BY g.name, i.name_ar");
 
 $params = [':from' => $from, ':to' => $to];
 if ($userId > 0) $params[':uid'] = $userId;
@@ -51,7 +64,7 @@ if ($timeFrom !== '' && $timeTo !== '') { $params[':tfrom'] = $timeFrom; $params
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calculate totals
+// Calculate totals (already converted in SQL)
 $totalSales = array_sum(array_column($rows, 'total_sales'));
 $totalCost = array_sum(array_column($rows, 'total_cost'));
 $totalProfit = array_sum(array_column($rows, 'net_profit'));
@@ -94,14 +107,10 @@ include 'header.php';
       </thead>
       <tbody>
         <?php foreach ($rows as $r): 
-          // Convert prices if exchange rate is enabled
+          // Values are already converted in SQL query
           $totalSalesConverted = (float)$r['total_sales'];
           $totalCostConverted = (float)$r['total_cost'];
           $netProfitConverted = (float)$r['net_profit'];
-          
-          $totalSalesConverted = $exchangeRateManager->convertToDisplayCurrency($totalSalesConverted, $r['currency']);
-          $totalCostConverted = $exchangeRateManager->convertToDisplayCurrency($totalCostConverted, $r['currency']);
-          $netProfitConverted = $exchangeRateManager->convertToDisplayCurrency($netProfitConverted, $r['currency']);
         ?>
           <tr>
             <td><?= htmlspecialchars($r['group_name']) ?></td>
@@ -114,9 +123,9 @@ include 'header.php';
         <?php endforeach; ?>
         <tr class="table-info fw-bold">
             <td colspan="3">المجموع النهائي</td>
-            <td><?= number_format($exchangeRateManager->convertToDisplayCurrency($totalSales, 'SYP'), 2) ?> <?= $exchangeSettings['base_currency'] ?></td>
-            <td><?= number_format($exchangeRateManager->convertToDisplayCurrency($totalCost, 'SYP'), 2) ?> <?= $exchangeSettings['base_currency'] ?></td>
-            <td><?= number_format($exchangeRateManager->convertToDisplayCurrency($totalProfit, 'SYP'), 2) ?> <?= $exchangeSettings['base_currency'] ?></td>
+            <td><?= number_format($totalSales, 2) ?> <?= $exchangeSettings['base_currency'] ?></td>
+            <td><?= number_format($totalCost, 2) ?> <?= $exchangeSettings['base_currency'] ?></td>
+            <td><?= number_format($totalProfit, 2) ?> <?= $exchangeSettings['base_currency'] ?></td>
         </tr>
       </tbody>
     </table>
