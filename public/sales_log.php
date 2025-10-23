@@ -12,7 +12,8 @@ if (!Auth::isAdmin()) { header('Location: dashboard.php'); exit; }
 $exchangeRateManager = new ExchangeRate($db);
 $exchangeSettings = $exchangeRateManager->getSystemSettings();
 
-$from = $_GET['date_from'] ?? date('Y-m-d');
+// Default date range: last 30 days to today
+$from = $_GET['date_from'] ?? date('Y-m-d', strtotime('-30 days'));
 $to = $_GET['date_to'] ?? date('Y-m-d');
 $userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 $timeFrom = $_GET['time_from'] ?? '';
@@ -29,6 +30,12 @@ $usersList = $db->query("SELECT id, username FROM Users ORDER BY username")->fet
 
 <main class="container mt-4">
   <h2>سجل المبيعات</h2>
+  <?php if (!isset($_GET['date_from']) && !isset($_GET['date_to'])): ?>
+  <div class="alert alert-info alert-dismissible fade show" role="alert">
+    <strong>ملاحظة:</strong> يتم عرض بيانات آخر 30 يوم بشكل افتراضي. يمكنك تغيير نطاق التاريخ من خلال النموذج أدناه.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <?php endif; ?>
   <div class="d-flex justify-content-between align-items-center">
     <form method="get" class="row g-2 mb-4">
       <div class="col-auto"><input type="date" name="date_from" class="form-control" value="<?= htmlspecialchars($from) ?>" placeholder="من"></div>
