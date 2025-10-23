@@ -82,6 +82,7 @@ $exchangeSettings = $exchangeRateManager->getSystemSettings();
       </tbody>
     </table>
   </div>
+<?php include 'footer.php'; ?>
 </main>
 
 <script>

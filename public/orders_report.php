@@ -86,6 +86,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </table>
 
   <div id="details" class="mt-4"></div>
+<?php include 'footer.php'; ?>
 </main>
 <script>
 async function loadDetails(orderId) {

@@ -22,4 +22,5 @@ include 'header.php';
     <button class="btn btn-success"><?= $isEdit?'حفظ':'إضافة' ?></button>
     <a href="warehouses.php" class="btn btn-secondary">إلغاء</a>
   </form>
+<?php include 'footer.php'; ?>
 </main>

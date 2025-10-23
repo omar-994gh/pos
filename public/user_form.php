@@ -62,6 +62,7 @@ if ($isEdit) {
   <a href="users.php" class="btn btn-secondary">إلغاء</a>
 </form>
 
+<?php include 'footer.php'; ?>
 </main>
 <script src="../assets/bootstrap.min.js"></script>
 </body>

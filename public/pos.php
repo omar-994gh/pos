@@ -182,6 +182,7 @@ $canAddDiscount = Auth::canAddDiscount($db);
   </div>
 </div>
 
+<?php include 'footer.php'; ?>
 </main>
 <script src="../assets/bootstrap.bundle.min.js"></script>
 <script>

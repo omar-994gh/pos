@@ -80,6 +80,7 @@ $items = $model->findItems($id);
 
   <button class="btn btn-primary" id="printBtn">طباعة</button>
   <a href="warehouse_entries.php" class="btn btn-secondary">عودة</a>
+<?php include 'footer.php'; ?>
 </main>
 <script>
     document.getElementById('printBtn').addEventListener('click', () => {

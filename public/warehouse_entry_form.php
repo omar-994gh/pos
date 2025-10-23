@@ -74,6 +74,7 @@ $warehouses = $whModel->allWh();
     <br>
     <button type="submit" class="btn btn-primary">حفظ الفاتورة</button>
   </form>
+<?php include 'footer.php'; ?>
 </main>
 
 <script>

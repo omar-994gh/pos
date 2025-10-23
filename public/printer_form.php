@@ -41,6 +41,7 @@ $printer      = $isEdit ? $printerModel->find((int)$_GET['id']) : null;
   <a href="printers.php" class="btn btn-secondary mt-3">إلغاء</a>
 </form>
 
+<?php include 'footer.php'; ?>
 </main>
 <script src="../assets/bootstrap.min.js"></script>
 </body>

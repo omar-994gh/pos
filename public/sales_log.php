@@ -103,6 +103,7 @@ $usersList = $db->query("SELECT id, username FROM Users ORDER BY username")->fet
       <?php endif; ?>
     </tbody>
   </table>
+<?php include 'footer.php'; ?>
 </main>
 <script>
   document.getElementById('printSales').addEventListener('click', async () => {

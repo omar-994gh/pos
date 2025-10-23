@@ -46,6 +46,7 @@ $users = $userModel->all();
   </tbody>
 </table>
 
+<?php include 'footer.php'; ?>
 </main>
 <script src="../assets/bootstrap.min.js"></script>
 </body>

@@ -27,4 +27,5 @@ include 'header.php';
       <?php endforeach; ?>
     </tbody>
   </table>
+<?php include 'footer.php'; ?>
 </main>

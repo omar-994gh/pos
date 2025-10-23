@@ -70,6 +70,7 @@ include 'header.php';
     </div>
     <button class="btn btn-primary mt-3">حفظ</button>
   </form>
+<?php include 'footer.php'; ?>
 </main>
 </body>
 </html>

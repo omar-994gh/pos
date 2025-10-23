@@ -111,6 +111,7 @@ $role           = htmlspecialchars($_SESSION['role']);
       <a href="pos.php" class="btn btn-primary btn-lg">ابدأ البيع الآن</a>
     </div>
     <?php endif; ?>
+  <?php include 'footer.php'; ?>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.js"></script>
 </body>

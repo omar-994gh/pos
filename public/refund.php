@@ -202,6 +202,7 @@ include 'header.php';
             <?php endif; ?>
         </tbody>
     </table>
+<?php include 'footer.php'; ?>
 </main>
 
 <!-- Refund Modal -->

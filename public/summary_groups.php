@@ -130,6 +130,7 @@ include 'header.php';
       </tbody>
     </table>
   </div>
+<?php include 'footer.php'; ?>
 </main>
 <script>
   document.getElementById('exportPDF').addEventListener('click', () => { window.print(); });

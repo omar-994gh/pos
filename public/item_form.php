@@ -96,6 +96,7 @@ $groupId = $isEdit
   <a href="items.php?group_id=<?= $groupId ?>" class="btn btn-secondary">إلغاء</a>
 </form>
 
+<?php include 'footer.php'; ?>
 </main>
 <script src="../assets/bootstrap.min.js"></script>
 <script src="js/add_item.js"></script>

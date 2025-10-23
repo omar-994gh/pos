@@ -105,4 +105,5 @@ $entries = $model->all($filters);
       <?php endforeach; ?>
     </tbody>
   </table>
+<?php include 'footer.php'; ?>
 </main>

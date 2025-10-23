@@ -64,4 +64,5 @@ if (!@copy($src, $destFile)) {
   <div class="text-center">
     <a href="db_backup.php" class="btn btn-secondary">عودة</a>
   </div>
+<?php include 'footer.php'; ?>
 </main>

@@ -56,4 +56,5 @@ include 'header.php';
     <button class="btn btn-danger mt-3">تفريغ المحدد</button>
     <a href="settings.php" class="btn btn-secondary mt-3">عودة</a>
   </form>
+<?php include 'footer.php'; ?>
 </main>

@@ -27,4 +27,5 @@ if (!Auth::isAdmin()) {
       </form>
     </div>
   </div>
+<?php include 'footer.php'; ?>
 </main>

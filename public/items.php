@@ -100,6 +100,7 @@ $settings = $db->query("SELECT currency FROM System_Settings ORDER BY id DESC LI
   </div>
 </div>
 
+<?php include 'footer.php'; ?>
 </main>
 <script src="../assets/bootstrap.min.js"></script>
 </body>
